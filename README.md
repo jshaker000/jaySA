@@ -5,6 +5,10 @@ The purpose of this program is to be a simple, easy to understand and use wrappe
 
 The source code also can demonstrate and serve as an example of how to use the OPENSSL EVP functions.
 
+Note:
+
+It is recommended when encrypting fodlers or large groups of files to make a tarball **first** then encrypt, because encryption is expensive
+
 ## Cryptographic Methods:
 
 This uses OpenSSL's "EVP" functions to encrypt and decrypt. The process has several steps.
@@ -62,7 +66,9 @@ while in this directory.
 -o    path of input file to write to. Default is stdout
 
 -b    convert the encrypted message to base64 before writing it / decode the encrypted message from base64 before decrypting
-      must be using on both sides, else decryption will fail
+      must be using on both sides, else decryption will fail.
+      Base64 is useful because it turns the output into all printable characters, but it also makes the output quite a bit bigger
+      It is useful to send in plaintext, but attaching a file of binary data may be preferable
 
 
 ## Examples:
