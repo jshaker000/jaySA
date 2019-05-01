@@ -11,7 +11,7 @@ It is recommended when encrypting fodlers or large groups of files to make a tar
 
 ## Cryptographic Methods:
 
-This uses OpenSSL's "EVP" functions to encrypt and decrypt. The process has several steps.
+This program uses OpenSSL's "EVP" functions to encrypt and decrypt. The process has several steps.
 
 First, it will generate a random symetric encryption key (in this case, aes_256_cbc). Then it will generate a random iv, and symetric key.
 It will use the iv & symetric key to encrypt the enctire message, then use RSA to asymetrically encrypt the symetric key. This hybrid approach allows
@@ -19,10 +19,20 @@ you to get the benefits of RSA without the downsides (slow, can only encrypt mes
 
 The whole message then, the asymetrically encrypted symetric key, the plain iv, and the symetrically encrypted message, is then signed if desired and sent. 
 
-Because each message will have its own random AES key and IV, so as long as your private key stays safe, all of the messages should be too. 
-Cracking one message should not allow any others to be cracked.
-
 Implementation is in *src/include/crypto.h* and *src/include/crypto.cpp* and you can read the man pages on OpenSSL EVP for more details.
+
+### An Aside on Asymetric Encryption vs Symetric Encryption:
+
+This system uses a public key / private key system. You generate a publickey / private key pair. You share your public to anyone, who can 
+encrypt messages with it that can only be decrypted with your private key. You can also sign messages with your private key that can only be verified
+with your public key. This gives you a way to encrypt messages with people without having to manage and share a secrret key between you.
+It also gives you a way to verify your identity. For this to work, you must trust that the person you are communicating with is the REAL OWNER of their 
+private key, and that there is no MITM attack.
+
+Because each message will have its own random AES key and IV, so as long as your private key stays safe, all of the messages should be too.
+Cracking one message's AES should not allow any others to be cracked.
+
+You must be careful to guard your private key and NEVER SHARE IT. Peopel with it can decrypt all messages sent to you and can impersonate your identity.
 
 ## Compile & Install:
 Clone the repository and run **make && make install** from the *src/* directory. 
