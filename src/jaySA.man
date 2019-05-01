@@ -1,0 +1,157 @@
+.\" Manpage for jaySA.
+.\" Create a git pull request at https://github.com/jshaker000/jaySA
+.TH man 1 "30 APRIL 2019" "1.0" "jaySA User Manual"
+.SH NAME
+.B stimulize 
+\- create 
+.I irsim 
+Wrapper of Openssl to generate RSA keys and do RSA encryption & signing, decryption & verification.
+.br
+Requires the Opennsl dev library to be installed
+
+.SH SYNOPSIS
+.B jaySA
+-h[elp]
+.br
+.B jaySA
+--gen-key={key name}
+.br
+.B jaySA
+-e[ncrypt] --pubk=<path to public key> [options]
+.br
+.B jaySA
+-d[ecrypt] --privk=<path to private key> [options]
+
+.SH DESCRIPTION
+.I jaySA
+Can create a private key/public key pair using Openssl libraries. It also has options to use those keys to encrypt and decrypt
+.br
+There are 3 modes of operation: encrypt mode, decrypt mode, and gen-key mode.
+
+.SH OPTIONS
+
+One of the 3 modes, encrypt, decrypt, or gen-key, MUST be enabled. Some flags are incompatable with one another.
+
+.br
+.PP
+
+.TP
+.IR \-e " | " \-\-encrypt
+.br
+Enable encrypt mode. Requires the path of the public key to encrypt for to be passed in using pubkf
+.br
+
+.TP
+.IR \-s " | " \-\-sign
+.br
+Sign the Encrypted Message. Requires encrypt mode. Requires the path of the private key to sign with to be passed in using privkf
+.br
+
+.TP
+.IR \-d " | " \-\-decrypt
+.br
+Enable decrypt mode. Requires the path of the private key to decrypt with to be passed in using privkf
+.br
+
+.TP
+.IR \-v " | " \-\-verify
+.br
+Verifies decrypted message's signature. Requires decrypt mode Requires the path of the public key to verify with to be passed in using pubkf
+If the signature is invalid, then the message will not be printed.
+.br
+
+.TP
+.IR \-b " | " \-\-base64
+.br
+Print the output of encryption as base64 or interpret the input of decryption as base64. Useful to send as armoured text.
+If this flag is used on the encrypt side it MUST be used on the decrypt side aswell.
+.br
+
+.TP
+.IR \-\-pubk "=<private key file>"
+.br
+Path to the public key (PEM FILE) to encrypt for / verify signature with
+.br
+
+.TP
+.IR \-\-privk "=<public key file>"
+.br
+Path to the private key (PEM FILE) to encrypt for / verify signature with
+.br
+
+.TP
+.IR \-i " | " \-\-in\-f " <input file>"
+.br
+Path to read data to encrypt / decrypt. If not passed, read data from stdin
+.br
+
+.TP
+.IR \-o " | " \-\-out\-f " <output file>"
+.br
+Path to write data from encryption / decryption. If not passed, write data from stdout
+.br
+
+.TP
+.IR \-g " | " \-\-gen\-key " <keyname>"
+.br
+Enables gen-key mode. Make a key pair <keyname>.pub.pem and <keyname>.priv.pem
+Key is 2048 bits.
+.br
+
+.TP
+.IR \-h " | " \-\-help
+help
+
+.SH EXAMPLES
+.PP
+Generate keys "apple.pub.pem" and "apple.priv.pem"
+.br
+\fI% jaySA --gen-key=apple
+.br
+
+.PP
+Encrypt contents of "file" for "apple.pub.pem" and sign with "apple.priv.pem". Store in "out.enc"
+.br
+\fI% jaySA -es --pubk=apple.pub.pem --privk=apple.priv.pem  -i file -o out.enc
+
+.PP 
+Decrypt the contents of base64 encoded and encrypted "out.enc" with key "apple.priv.pem. Print
+reseult to stdout
+.br
+\fI% jaySA -db --privk=apple.priv.pem  -i out.enc
+
+.SH Todo's / Known Bugs
+1) Simplify Flags
+.br
+2) Allow dettached signatures, ie signing / verifying without encrypting / decrypting
+.br
+3) Allow options to generate keys of different sizes.
+.br
+4) Make error messages clearer and less CAPSY
+.SH AUTHOR
+2019 Joseph Shaker.
+.br
+Please make all inquiries or bug reports on the github page.
+.br
+https://github.com/jshaker000/jaySA
+.PP
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+.br
+* Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.
+.br
+* Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation
+and/or other materials provided with the distribution.
+.br
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
