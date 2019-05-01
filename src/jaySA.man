@@ -2,10 +2,8 @@
 .\" Create a git pull request at https://github.com/jshaker000/jaySA
 .TH man 1 "30 APRIL 2019" "1.0" "jaySA User Manual"
 .SH NAME
-.B stimulize 
-\- create 
-.I irsim 
-Wrapper of Openssl to generate RSA keys and do RSA encryption & signing, decryption & verification.
+.B jaySA 
+\- wrapper of Openssl to generate RSA keys and do RSA encryption & signing, decryption & verification.
 .br
 Requires the Opennsl dev library to be installed
 
