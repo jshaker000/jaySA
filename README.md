@@ -36,7 +36,7 @@ while in this directory.
     $ jaySA -e[ncrypt] --pubk=<path to public key> [options]
     $ jaySA -d[ecrypt] --privk=<path to private key> [options]
 
-###Options:
+### Options:
 
 -s    sign the message. Can only be used in **encrypt** mode and requries a private key to be passed in to sign with using **--privk=**
 
@@ -52,17 +52,17 @@ while in this directory.
 
 ## Examples:
 
-###Example 1:
+### Example 1:
 Generate keys "apple.pub.pem" and "apple.priv.pem"
 
     $ jaySA --gen-key=apple
 
-###Example 2:
+### Example 2:
 Encrypt  contents of "file" for "apple.pub.pem" and sign with "apple.priv.pem". Store in "out.enc"
 
     $ jaySA -es --pubk=apple.pub.pem --privk=apple.priv.pem  -i file -o out.enc
 
-###Example 3:
+### Example 3:
 Decrypt the contents  of base64 encoded and encrypted "out.enc" with key "apple.priv.pem". Print reseult to stdout
 
     $ jaySA -db --privk=apple.priv.pem  -i out.enc
