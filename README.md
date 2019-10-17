@@ -5,9 +5,10 @@ The purpose of this program is to be a simple, easy to understand and use wrappe
 
 The source code also can demonstrate and serve as an example of how to use the OPENSSL EVP functions.
 
-Note:
+Notes:
 
-It is recommended when encrypting fodlers or large groups of files to make a tarball **first** then encrypt, because encryption is expensive
+1) It is recommended when encrypting fodlers or large groups of files to make a tarball/zip **first** then encrypt, because encryption is computationally expensive
+2) Currently I load the entire file to be encrypted into RAM at once so if your file is too big this may fail.
 
 ## Cryptographic Methods:
 
@@ -26,13 +27,12 @@ Implementation is in *src/include/crypto.h* and *src/include/crypto.cpp* and you
 This system uses a public key / private key system. You generate a publickey / private key pair. You share your public to anyone, who can 
 encrypt messages with it that can only be decrypted with your private key. You can also sign messages with your private key that can only be verified
 with your public key. This gives you a way to encrypt messages with people without having to manage and share a secrret key between you.
-It also gives you a way to verify your identity. For this to work, you must trust that the person you are communicating with is the REAL OWNER of their 
-private key, and that there is no MITM attack.
+It also gives you a way to verify your identity. For this to work, you must trust that the person you are communicating with is the REAL OWNER of their private key, and that there is no MITM attack. (try to verify it with them out of channel)
 
 Because each message will have its own random AES key and IV, so as long as your private key stays safe, all of the messages should be too.
 Cracking one message's AES should not allow any others to be cracked.
 
-You must be careful to guard your private key and NEVER SHARE IT. Peopel with it can decrypt all messages sent to you and can impersonate your identity.
+You must be careful to guard your private key and NEVER SHARE IT. People with it can decrypt all messages sent to you and can impersonate your identity.
 
 ## Compile & Install:
 Clone the repository and run **make && make install** from the *src/* directory. 
@@ -54,7 +54,7 @@ If everything succeeds you can can now see examples and more detailed informatio
 
 If installation of the manpage fails, you can still see the manpage locally by running: 
 
-    man src/./jaySA
+    man src/./jaySA.man
 
 while in this directory.
 
