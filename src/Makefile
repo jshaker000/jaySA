@@ -13,12 +13,13 @@ IDIR       :=${CURDIR}/../include
 ODIR       :=${CURDIR}/../obj
 CXX        :=g++
 CXXFLAGS   :=-std=c++11 -O2 -Wall -Werror -Wextra -I${IDIR}
-LDFLAGS    := -lcrypto
+LDFLAGS    :=-lcrypto -lssl
 
 #macos brew puts openssl headers in a non default path
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Darwin)
 	CXXFLAGS      += -I/usr/local/opt/openssl/include/
+	LDFLAGS       += -L/usr/local/opt/openssl/lib
 	MAN_DIRECTORY := /usr/local/share/man/man1
 endif
 ifeq ($(UNAME_S),Linux)
