@@ -12,13 +12,13 @@ SRCDIR     :=${CURDIR}
 IDIR       :=${CURDIR}/../include
 ODIR       :=${CURDIR}/../obj
 CXX        :=g++
-CXXFLAGS   :=-std=c++11 -O2 -I$(IDIR)
+CXXFLAGS   :=-std=c++11 -O2 -Wall -Werror -Wextra -I${IDIR}
 LDFLAGS    := -lcrypto
 
 #macos brew puts openssl headers in a non default path
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Darwin)
-	CXXFLAGS      += -I/usr/local/opt/openssl/include
+	CXXFLAGS      += -I/usr/local/opt/openssl/include/
 	MAN_DIRECTORY := /usr/local/share/man/man1
 endif
 ifeq ($(UNAME_S),Linux)
@@ -28,35 +28,34 @@ endif
 TARGETS = jaySA
 
 _DEPS  := crypto.h base64.h
-DEPS   := $(patsubst %,$(IDIR)/%,$(_DEPS))
+DEPS   := $(patsubst %,${IDIR}/%,${_DEPS})
 
-_MAINS := $(addsuffix .o, $(TARGETS) )
-MAINS  := $(patsubst %,$(ODIR)/%,$(_MAINS))
+_MAINS := $(addsuffix .o, ${TARGETS})
+MAINS  := $(patsubst %,${ODIR}/%,${_MAINS})
 
-_OBJ   := crypto.o base64.o $(_MAINS)
-OBJ    := $(patsubst %,$(ODIR)/%,$(_OBJ))
+_OBJ   := $(patsubst %.h, %.o, ${_DEPS}) ${_MAINS}
+OBJ    := $(patsubst %,${ODIR}/%,${_OBJ})
 
 .PHONY: all install uninstall remove clean
 
-all: $(TARGETS)
+all: ${TARGETS}
 
 install: all
-	@if [ ! -d $(MAN_DIRECTORY) ]; then mkdir $(MAN_DIRECTORY); fi
-	for i in $(TARGETS); do cp -f $$i $(INSTALLDIR)/$$i; cp -f $$i.man $(MAN_DIRECTORY)/$$i.1; gzip -f $(MAN_DIRECTORY)/$$i.1; done
-
+	@if [ ! -d ${MAN_DIRECTORY} ]; then mkdir ${MAN_DIRECTORY}; fi
+	for i in ${TARGETS}; do cp -f $$i ${INSTALLDIR}/$$i; cp -f $$i.man ${MAN_DIRECTORY}/$$i.1; gzip -f ${MAN_DIRECTORY}/$$i.1; done
 
 uninstall:
-	for i in $(TARGETS); do rm -f $(INSTALLDIR)/$$i; rm -f $(MAN_DIRECTORY)/$$i.1.gz; done
+	for i in ${TARGETS}; do rm -f ${INSTALLDIR}/$$i; rm -f ${MAN_DIRECTORY}/$$i.1.gz; done
 
 
 remove:
-	rm -f $(TARGETS)
+	rm -f ${TARGETS}
 
 clean:
-	rm -f $(ODIR)/*.o
+	rm -f ${ODIR}/*.o
 
-$(OBJ): $(ODIR)/%.o : $(SRCDIR)/%.cpp $(DEPS)
-	$(CXX) -c -o $@ $< $(CXXFLAGS)
+${OBJ}: ${ODIR}/%.o : ${SRCDIR}/%.cpp ${DEPS}
+	${CXX} -c -o $@ $< ${CXXFLAGS}
 
-$(TARGETS): % : $(filter-out $(MAINS), $(OBJ)) $(ODIR)/%.o
-	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDFLAGS)
+${TARGETS}: % : $(filter-out ${MAINS}, ${OBJ}) ${ODIR}/%.o
+	${CXX} -o $@ $^ ${CXXFLAGS} ${LDFLAGS}
