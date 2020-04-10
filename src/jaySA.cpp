@@ -27,7 +27,7 @@ int main( int argc, char**argv )
     std::string out_f  = "";
     std::string genkey = "";
 
-    while ( 1 )
+    while (1)
     {
         int c;
         int option_index = 0;
@@ -119,56 +119,54 @@ int main( int argc, char**argv )
         }
     }
 
-    std::cerr << std::endl;
-
     //decide what to do based on flags received and 
     //check there are no invalid option combinations
-    if ( help )
+    if (help)
     {
         std::cerr << "Please refer to the manpage for help" << std::endl;
         return 0;
     }
 
-    if ( genkey != "" )
+    if (genkey != "")
     {
         std::cerr << "Generating keypair with name " << genkey << std::endl;
         return crypto::rsa_genkeypair ( genkey );
     }
 
-    if ( encrypt && pubk.size() == 0 )
+    if (encrypt && pubk.size() == 0)
     {
         std::cerr << "No public key to encrypt with" << std::endl;
         return 1;
     }
 
-    if ( verify && pubk.size() == 0 )
+    if (verify && pubk.size() == 0)
     {
         std::cerr << "No public key to verify with" << std::endl;
         return 1;
     }
 
-    else if ( decrypt && privk.size() == 0 )
+    else if (decrypt && privk.size() == 0)
     {
         std::cerr << "No private key to decrypt with" << std::endl;
         return 1;
     }
 
-    else if ( sign && privk.size() == 0 )
+    else if (sign && privk.size() == 0)
     {
         std::cerr << "No private key to sign with" << std::endl;
     }
 
-    if ( encrypt && !sign )
+    if (encrypt && !sign)
     {
         privk = "";
     }
 
-    if ( decrypt && !verify )
+    if (decrypt && !verify)
     {
         pubk = "";
     }
 
-    if( !encrypt && !decrypt )
+    if(!encrypt && !decrypt)
     {
         std::cerr << "No work to do" << std::endl;
         return 200;
@@ -176,25 +174,24 @@ int main( int argc, char**argv )
 
     //decide where to get input from
     std::string in, out;
-    
-    if( isatty( STDIN_FILENO ) == 0 && in_f == "" )
+
+    if(isatty( STDIN_FILENO ) == 0 && in_f == "")
     {
         in_f = "/dev/stdin";
     }
 
-    if ( in_f.size() )
+    if (in_f.size())
     {
-        //read in your public key and send it back
-        std::fstream infile( ( in_f ).c_str(), std::ios::in|std::ios::binary );
+        std::fstream infile((in_f).c_str(), std::ios::in|std::ios::binary);
 
-        if ( infile.fail() )
+        if (infile.fail())
         {
             std::cerr << "Failed to open input file " <<  in_f << std::endl;
             return 2;
         }
 
-        std::string s( ( std::istreambuf_iterator<char>( infile ) ),
-                         std::istreambuf_iterator<char>() );
+        std::string s((std::istreambuf_iterator<char>(infile)),
+                       std::istreambuf_iterator<char>());
         in = s;
         infile.close();
     }
@@ -202,30 +199,30 @@ int main( int argc, char**argv )
     else
     {
         std::cerr << "Print your message to be encrypted/decypted\n>" << std::flush;
-        std::getline( std::cin, in );
+        std::getline(std::cin, in);
     }
 
     //encrypt / decrypt
-    if ( encrypt )
+    if (encrypt)
     {
-        if ( crypto::rsa_encrypt_sign( in, pubk, privk, out ) )
+        if (crypto::rsa_encrypt_sign(in, pubk, privk, out))
         {
             std::cerr << "ERROR ENCRYPTING OR SIGNING" << std::endl;
             return 3;
         }
-        if( base64 )
+        if(base64)
         {
-            out = base64::base64_encode( reinterpret_cast<const unsigned char*>(out.c_str()), out.size() );
+            out = base64::base64_encode(reinterpret_cast<const unsigned char*>(out.c_str()), out.size());
         }
     }
 
-    else if ( decrypt )
+    else if (decrypt)
     {
-        if( base64 )
+        if(base64)
         {
-            in = base64::base64_decode( in );
+            in = base64::base64_decode(in);
         }
-        if ( crypto::rsa_decrypt_verify( in, pubk, privk, out ) )
+        if ( crypto::rsa_decrypt_verify(in, pubk, privk, out))
         {
             std::cerr << "ERROR DECRYPTING OR VERIFYING" << std::endl;
             return 4;
@@ -233,18 +230,18 @@ int main( int argc, char**argv )
     }
 
     //print out
-    if ( out_f == "" )
+    if (out_f == "")
     {
         out_f = "/dev/stdout";
     }
 
-    std::fstream outfile( ( out_f ).c_str(), std::ios::out|std::ios::binary );
-    if( outfile.fail() )
+    std::fstream outfile(( out_f ).c_str(), std::ios::out|std::ios::binary);
+    if(outfile.fail())
     {
         std::cerr << "Failed to open output file " <<  out_f << std::endl;
         return 5;
     }
-    outfile.write( out.c_str(), out.size() );
+    outfile.write(out.c_str(), out.size());
     outfile.close();
 
     return 0;
