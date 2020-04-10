@@ -39,6 +39,8 @@ Clone the repository and run **make && make install** from the *src/* directory.
 This will compile the program and copy it to your **$PATH**, and install the man page.
 Depending on your system, *make install* may require administrative privileges.
 
+You must have **openssl** with the developer libs installed.
+
     $ make && make install
 
 To uninstall the program, run:
