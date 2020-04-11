@@ -12,7 +12,7 @@ SRCDIR     :=${CURDIR}
 IDIR       :=${CURDIR}/../include
 ODIR       :=${CURDIR}/../obj
 CXX        :=g++
-CXXFLAGS   :=-std=c++11 -O3 -flto -Wall -Werror -Wextra -I${IDIR}
+CXXFLAGS   :=-std=c++17 -O3 -flto -Wall -Werror -Wextra -I${IDIR}
 LDFLAGS    :=-lcrypto -lssl
 
 #macos brew puts openssl headers in a non default path
