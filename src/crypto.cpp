@@ -51,7 +51,7 @@ static void bin_to_hex(unsigned char* a, int len, std::string &out)
 //        SLEN BTES: sig ( of e_key + iv + cipher_text )
 // Returns 0 on success, !=0 on failure
 // if priv_key== "", dont sign
-int crypto::rsa_encrypt_sign(const std::string_view &msg,       const std::string &pub_key,
+int crypto::rsa_encrypt_sign(const std::string_view msg,        const std::string &pub_key,
                              const std::string      &priv_key,  std::string &encoded)
 {
     //load keys from file
@@ -223,7 +223,7 @@ int crypto::rsa_encrypt_sign(const std::string_view &msg,       const std::strin
 //        SLEN BTES: sig ( of e_key + iv + cipher_text )
 // Returns 0 on success, !=0 on failure
 // if pub_key== "", dont verify
-int crypto::rsa_decrypt_verify(const std::string_view &msg,      const std::string &pub_key,
+int crypto::rsa_decrypt_verify(const std::string_view msg,       const std::string &pub_key,
                                const std::string      &priv_key, std::string  &decoded)
 {
     //verify msg is as long as it claims / dont falsely parse something
