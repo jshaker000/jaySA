@@ -13,7 +13,7 @@
 static const auto CIPHER_USED = EVP_aes_256_cbc();
 static const auto DIGEST_USED = EVP_sha256();
 
-static inline void copy_into_string (unsigned char* a, size_t len, std::string &s)
+static void copy_into_string (unsigned char* a, size_t len, std::string &s)
 {
     s.clear();
     s.reserve(len);
@@ -21,7 +21,7 @@ static inline void copy_into_string (unsigned char* a, size_t len, std::string &
         s.push_back(static_cast<char>(a[i]));
 }
 
-static inline void append_into_string (unsigned char* a, size_t len, std::string &s, bool reserve)
+static void append_into_string (unsigned char* a, size_t len, std::string &s, bool reserve)
 {
     if (reserve)
         s.reserve(s.size() + len);
@@ -32,6 +32,7 @@ static inline void append_into_string (unsigned char* a, size_t len, std::string
 static void bin_to_hex_str(unsigned char* a, int len, std::string &out)
 {
     out.clear();
+    out.reserve(2*len);
     for (int i = 0; i < len; i++)
     {
         char temp = static_cast<char>((a[i] & 0xF0) >> 4);
@@ -452,7 +453,7 @@ int crypto::rsa_genkeypair  (const std::string &name)
 // convert to a hex string and store in hexKeyOut
 // key_len_bits must be a multiple of 8
 // returns 0 on success, !=0 on failure
-int gen_rand_bits_hex(int key_len_bits, std::string &hexKeyOut)
+int crypto::gen_rand_bits_hex(int key_len_bits, std::string &hexKeyOut)
 {
 
     if (key_len_bits % 8)
