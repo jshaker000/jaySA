@@ -235,10 +235,10 @@ int crypto::rsa_decrypt_verify(const std::string_view &msg,      const std::stri
         return 1;
     }
 
-    const auto e_key_length_str = msg.substr(0, 2);
+    const std::string_view e_key_length_str = msg.substr(0, 2);
     size_t e_key_length = 256 * static_cast<size_t>(e_key_length_str[0]) + static_cast<size_t>(e_key_length_str[1]);
 
-    const auto sig_key_length_str = msg.substr(2, 2);
+    const std::string_view sig_key_length_str = msg.substr(2, 2);
     size_t slen = 256 * static_cast<size_t>(sig_key_length_str[0]) + static_cast<size_t>(sig_key_length_str[1]);
 
     if ( msg.size() < static_cast<size_t>(4 + e_key_length + iv_len + slen + 1))
@@ -248,11 +248,11 @@ int crypto::rsa_decrypt_verify(const std::string_view &msg,      const std::stri
     }
 
     //parse out the encryption key, iv, message, and signature
-    const auto e_key_str  = msg.substr(4,  e_key_length);
-    const auto iv_str     = msg.substr(4 + e_key_length, iv_len);
-    const auto enc_msg    = msg.substr(4 + e_key_length + iv_len, msg.size() - 4 - e_key_length - iv_len - slen);
-    const auto signed_str = msg.substr(4, e_key_str.size() + iv_str.size() + enc_msg.size());
-    const auto sig_str    = msg.substr(msg.size() - slen);
+    const std::string_view e_key_str  = msg.substr(4,  e_key_length);
+    const std::string_view iv_str     = msg.substr(4 + e_key_length, iv_len);
+    const std::string_view enc_msg    = msg.substr(4 + e_key_length + iv_len, msg.size() - 4 - e_key_length - iv_len - slen);
+    const std::string_view signed_str = msg.substr(4, e_key_str.size() + iv_str.size() + enc_msg.size());
+    const std::string_view sig_str    = msg.substr(msg.size() - slen);
 
     //load keys from file
     int verify = pub_key.size();
