@@ -29,7 +29,7 @@ static inline void append_into_string (unsigned char* a, size_t len, std::string
         s.push_back(static_cast<char>(a[i]));
 }
 
-static void bin_to_hex(unsigned char* a, int len, std::string &out)
+static void bin_to_hex_str(unsigned char* a, int len, std::string &out)
 {
     out.clear();
     for (int i = 0; i < len; i++)
@@ -66,15 +66,11 @@ int crypto::rsa_encrypt_sign(const std::string_view msg,        const std::strin
 {
     encoded.clear();
     // load keys from file
-    int sign = priv_key.size();
-    FILE* pub_f  = fopen(pub_key.c_str(), "r");
-    FILE* priv_f = nullptr;
-    if (sign)
-    {
-        priv_f = fopen(priv_key.c_str(), "r");
-    }
+    bool sign = priv_key.size() != 0;
+    FILE  *pub_f  = fopen(pub_key.c_str(), "r");
+    FILE  *priv_f = sign ? fopen(priv_key.c_str(), "r") : nullptr;
 
-    if (pub_f == nullptr || ( priv_f == nullptr && sign ))
+    if (pub_f == nullptr || (sign && (priv_f == nullptr)))
     {
         if (pub_f  != nullptr) fclose(pub_f);
         if (priv_f != nullptr) fclose(priv_f);
@@ -247,7 +243,7 @@ int crypto::rsa_decrypt_verify(const std::string_view msg,       const std::stri
     const std::string_view sig_key_length_str = msg.substr(2, 2);
     size_t sig_len = 256 * static_cast<size_t>(sig_key_length_str[0]) + static_cast<size_t>(sig_key_length_str[1]);
 
-    if ( msg.size() < static_cast<size_t>(4 + e_key_length + iv_length + sig_len + 1))
+    if (msg.size() < static_cast<size_t>(4 + e_key_length + iv_length + sig_len + 1))
     {
         std::cerr << ">RSA_DECRYPT_VERIFY INVALID INPUT MESSAGE" << std::endl;
         return 1;
@@ -260,16 +256,11 @@ int crypto::rsa_decrypt_verify(const std::string_view msg,       const std::stri
     const std::string_view signed_str = msg.substr(4, e_key_str.size() + iv_str.size() + enc_msg.size());
     const std::string_view sig_str    = msg.substr(msg.size() - sig_len);
 
-    //load keys from file
-    int verify = pub_key.size();
-    FILE* pub_f  = nullptr;
-    FILE* priv_f = fopen(priv_key.c_str(), "r");
-    if (verify)
-    {
-        pub_f = fopen(pub_key.c_str(), "r");
-    }
-
-    if ((pub_f == nullptr && verify) || priv_f == nullptr)
+    // load keys from file
+    bool verify  = pub_key.size() != 0;
+    FILE *pub_f  = verify ? fopen(pub_key.c_str(), "r") : nullptr;
+    FILE *priv_f = fopen(priv_key.c_str(), "r");
+    if ((verify && (pub_f == nullptr)) || priv_f == nullptr)
     {
         if (pub_f  != nullptr) fclose(pub_f);
         if (priv_f != nullptr) fclose(priv_f);
@@ -384,8 +375,8 @@ int crypto::rsa_genkeypair  (const std::string &name)
     int key_length = 2048;
     int error      = 0;
 
-    FILE* pub_f  = nullptr;
-    FILE* priv_f = nullptr;
+    FILE *pub_f  = nullptr;
+    FILE *priv_f = nullptr;
 
     EVP_PKEY *pkey    = nullptr;
     EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, nullptr);
@@ -438,7 +429,7 @@ int crypto::rsa_genkeypair  (const std::string &name)
         goto cleanup;
     }
 
-    if (1 != PEM_write_PrivateKey( priv_f, pkey, nullptr, nullptr, 0, nullptr, nullptr))
+    if (1 != PEM_write_PrivateKey(priv_f, pkey, nullptr, nullptr, 0, nullptr, nullptr))
     {
         error = 7;
         std::cerr << ">RSA_GENKEYPAIR ERROR WRITING TO PUBK FILE" << std::endl;
@@ -470,7 +461,7 @@ int gen_rand_bits_hex(int key_len_bits, std::string &hexKeyOut)
         return 1;
     }
 
-    unsigned char*aes_key_bin = static_cast<unsigned char*>(calloc(key_len_bits/8, sizeof(*aes_key_bin)));
+    unsigned char *aes_key_bin = static_cast<unsigned char*>(calloc(key_len_bits/8, sizeof(*aes_key_bin)));
 
     if (aes_key_bin == nullptr)
     {
@@ -485,7 +476,7 @@ int gen_rand_bits_hex(int key_len_bits, std::string &hexKeyOut)
         return 3;
     }
 
-    bin_to_hex(aes_key_bin, key_len_bits/8, hexKeyOut);
+    bin_to_hex_str(aes_key_bin, key_len_bits/8, hexKeyOut);
 
     free(aes_key_bin);
 
