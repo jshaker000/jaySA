@@ -21,9 +21,10 @@ static inline void copy_into_string (unsigned char* a, size_t len, std::string &
         s.push_back(static_cast<char>(a[i]));
 }
 
-static inline void append_into_string (unsigned char* a, size_t len, std::string &s)
+static inline void append_into_string (unsigned char* a, size_t len, std::string &s, bool reserve)
 {
-    s.reserve(s.size() + len);
+    if (reserve)
+        s.reserve(s.size() + len);
     for (size_t i = 0; i < len; i++)
         s.push_back(static_cast<char>(a[i]));
 }
@@ -143,7 +144,7 @@ int crypto::rsa_encrypt_sign(const std::string_view msg,        const std::strin
 
     cipher_text_length += block_length;
 
-    encoded.reserve(4+e_key_length+iv_length+cipher_text_length);
+    encoded.reserve(4 + e_key_length+iv_length + cipher_text_length);
     // store e_key_length
     encoded.push_back(e_key_length / 256);
     encoded.push_back(e_key_length % 256);
@@ -151,9 +152,9 @@ int crypto::rsa_encrypt_sign(const std::string_view msg,        const std::strin
     encoded.push_back(0);
     encoded.push_back(0);
     // copy e_key, iv, cipher text
-    append_into_string(e_key,       e_key_length,       encoded);
-    append_into_string(iv,          iv_length,          encoded);
-    append_into_string(cipher_text, cipher_text_length, encoded);
+    append_into_string(e_key,       e_key_length,       encoded, false);
+    append_into_string(iv,          iv_length,          encoded, false);
+    append_into_string(cipher_text, cipher_text_length, encoded, false);
 
     //sign e_key+iv+cipher_text and then append the signature to the end
     if (sign)
@@ -197,7 +198,7 @@ int crypto::rsa_encrypt_sign(const std::string_view msg,        const std::strin
         // update sig_len if needed
         encoded[2] = sig_len / 256;
         encoded[3] = sig_len % 256;
-        append_into_string(sig, sig_len, encoded);
+        append_into_string(sig, sig_len, encoded, true);
     }
 
     cleanup:
@@ -489,5 +490,4 @@ int gen_rand_bits_hex(int key_len_bits, std::string &hexKeyOut)
     free(aes_key_bin);
 
     return 0;
-
 }
