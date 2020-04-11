@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <string>
+#include <string_view>
 
 #include <openssl/evp.h>
 #include <openssl/pem.h>
@@ -50,8 +51,8 @@ static void bin_to_hex(unsigned char* a, int len, std::string &out)
 //        SLEN BTES: sig ( of e_key + iv + cipher_text )
 // Returns 0 on success, !=0 on failure
 // if priv_key== "", dont sign
-int crypto::rsa_encrypt_sign(const std::string &msg, const std::string &pub_key,
-                             const std::string &priv_key,  std::string &encoded)
+int crypto::rsa_encrypt_sign(const std::string_view &msg,       const std::string &pub_key,
+                             const std::string      &priv_key,  std::string &encoded)
 {
     //load keys from file
     int sign = priv_key.size();
@@ -129,7 +130,7 @@ int crypto::rsa_encrypt_sign(const std::string &msg, const std::string &pub_key,
 
     cipher_text_length += block_length;
 
-    if (1 != EVP_SealFinal( rsactx, cipher_text + cipher_text_length, (int*)&block_length))
+    if (1 != EVP_SealFinal(rsactx, cipher_text + cipher_text_length, (int*)&block_length))
     {
         error = 6;
         std::cerr << ">RSA_ENCRYPT_SIGN ERROR ENCRYPTING" << std::endl;
@@ -222,8 +223,8 @@ int crypto::rsa_encrypt_sign(const std::string &msg, const std::string &pub_key,
 //        SLEN BTES: sig ( of e_key + iv + cipher_text )
 // Returns 0 on success, !=0 on failure
 // if pub_key== "", dont verify
-int crypto::rsa_decrypt_verify(const std::string &msg, const std::string &pub_key,
-                               const std::string &priv_key, std::string  &decoded)
+int crypto::rsa_decrypt_verify(const std::string_view &msg,      const std::string &pub_key,
+                               const std::string      &priv_key, std::string  &decoded)
 {
     //verify msg is as long as it claims / dont falsely parse something
     int iv_len = EVP_CIPHER_iv_length(CIPHER_USED);
@@ -234,10 +235,10 @@ int crypto::rsa_decrypt_verify(const std::string &msg, const std::string &pub_ke
         return 1;
     }
 
-    const std::string e_key_length_str = msg.substr(0, 2);
+    const auto e_key_length_str = msg.substr(0, 2);
     size_t e_key_length = 256 * static_cast<size_t>(e_key_length_str[0]) + static_cast<size_t>(e_key_length_str[1]);
 
-    const std::string sig_key_length_str = msg.substr(2, 2);
+    const auto sig_key_length_str = msg.substr(2, 2);
     size_t slen = 256 * static_cast<size_t>(sig_key_length_str[0]) + static_cast<size_t>(sig_key_length_str[1]);
 
     if ( msg.size() < static_cast<size_t>(4 + e_key_length + iv_len + slen + 1))
@@ -247,16 +248,17 @@ int crypto::rsa_decrypt_verify(const std::string &msg, const std::string &pub_ke
     }
 
     //parse out the encryption key, iv, message, and signature
-    const std::string e_key_str = msg.substr(4, e_key_length);
-    const std::string iv_str    = msg.substr(4 + e_key_length, iv_len);
-    const std::string enc_msg   = msg.substr(4 + e_key_length + iv_len, msg.size() - 4 - e_key_length - iv_len - slen);
-    const std::string sig_str   = msg.substr(msg.size() - slen);
+    const auto e_key_str  = msg.substr(4,  e_key_length);
+    const auto iv_str     = msg.substr(4 + e_key_length, iv_len);
+    const auto enc_msg    = msg.substr(4 + e_key_length + iv_len, msg.size() - 4 - e_key_length - iv_len - slen);
+    const auto signed_str = msg.substr(4, e_key_str.size() + iv_str.size() + enc_msg.size());
+    const auto sig_str    = msg.substr(msg.size() - slen);
 
     //load keys from file
     int verify = pub_key.size();
     FILE* pub_f  = nullptr;
     FILE* priv_f = fopen(priv_key.c_str(), "r");
-    if ( verify )
+    if (verify)
     {
         pub_f = fopen(pub_key.c_str(), "r");
     }
@@ -281,7 +283,7 @@ int crypto::rsa_decrypt_verify(const std::string &msg, const std::string &pub_ke
     }
     priv_k = PEM_read_PrivateKey(priv_f, nullptr, nullptr, nullptr);
 
-    unsigned char*decode_text = static_cast<unsigned char*> ( calloc( enc_msg.size() + iv_len, sizeof(*decode_text) ) );
+    unsigned char *decode_text = static_cast<unsigned char*> (calloc(enc_msg.size() + iv_len, sizeof(*decode_text)));
 
     int error              = 0;
     int decode_text_length = 0;
@@ -295,8 +297,8 @@ int crypto::rsa_decrypt_verify(const std::string &msg, const std::string &pub_ke
     }
 
     //decrypt e_key with priv key
-    if ( 1 != EVP_OpenInit(rsactx, CIPHER_USED, reinterpret_cast<const unsigned char*>(e_key_str.data() ), e_key_str.size(),
-                           reinterpret_cast<const unsigned char*>(iv_str.data()), priv_k))
+    if (1 != EVP_OpenInit(rsactx, CIPHER_USED, reinterpret_cast<const unsigned char*>(e_key_str.data()), e_key_str.size(),
+                          reinterpret_cast<const unsigned char*>(iv_str.data()), priv_k))
     {
         error = 4;
         std::cerr << ">RSA_DECRYPT_VERIFY ERROR DECRYPTING" << std::endl;
@@ -337,7 +339,7 @@ int crypto::rsa_decrypt_verify(const std::string &msg, const std::string &pub_ke
         }
 
         if (1 != EVP_DigestVerifyUpdate(mdctx,
-            reinterpret_cast<const unsigned char*>((e_key_str+iv_str+enc_msg).data()), (e_key_str + iv_str + enc_msg).size()))
+            reinterpret_cast<const unsigned char*>(signed_str.data()), signed_str.size()))
         {
             error = 8;
             std::cerr << ">RSA_DECRYPT_VERIFY: ERROR VERIFYING SIGNATURE" << std::endl;
