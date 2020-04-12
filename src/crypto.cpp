@@ -82,14 +82,9 @@ int crypto::rsa_encrypt_sign(const std::string_view msg,        const std::strin
     EVP_CIPHER_CTX *rsactx = EVP_CIPHER_CTX_new();
     EVP_MD_CTX     *mdctx  = EVP_MD_CTX_create();
 
-    EVP_PKEY *pub_k  = nullptr;
-    EVP_PKEY *priv_k = nullptr;
+    EVP_PKEY *pub_k  = PEM_read_PUBKEY(pub_f,  nullptr, nullptr, nullptr);
+    EVP_PKEY *priv_k = sign ? PEM_read_PrivateKey(priv_f, nullptr, nullptr, nullptr) : nullptr;
 
-    pub_k = PEM_read_PUBKEY(pub_f,  nullptr, nullptr, nullptr);
-    if (sign)
-    {
-        priv_k = PEM_read_PrivateKey(priv_f, nullptr, nullptr, nullptr);
-    }
     int iv_length = EVP_CIPHER_iv_length(CIPHER_USED);
 
     unsigned char *iv          = static_cast<unsigned char*>(calloc(iv_length,               sizeof(*iv)));
@@ -199,18 +194,19 @@ int crypto::rsa_encrypt_sign(const std::string_view msg,        const std::strin
     }
 
     cleanup:
-    free(iv);
-    free(cipher_text);
-    free(e_key);
-    free(sig);
 
-    EVP_CIPHER_CTX_free(rsactx);
-    EVP_MD_CTX_destroy(mdctx);
-    EVP_PKEY_free(pub_k);
-    EVP_PKEY_free(priv_k);
+    if(rsactx != nullptr) EVP_CIPHER_CTX_free(rsactx);
+    if(mdctx  != nullptr) EVP_MD_CTX_destroy(mdctx);
+    if(pub_k  != nullptr) EVP_PKEY_free(pub_k);
+    if(priv_k != nullptr) EVP_PKEY_free(priv_k);
 
-    if (priv_f != nullptr) fclose(priv_f);
-    if (pub_f  != nullptr) fclose(pub_f);
+    if(priv_f != nullptr) fclose(priv_f);
+    if(pub_f  != nullptr) fclose(pub_f);
+
+    if(iv          != nullptr) free(iv);
+    if(cipher_text != nullptr) free(cipher_text);
+    if(e_key       != nullptr) free(e_key);
+    if(sig         != nullptr) free(sig);
 
     return error;
 }
@@ -272,14 +268,8 @@ int crypto::rsa_decrypt_verify(const std::string_view msg,       const std::stri
     EVP_CIPHER_CTX *rsactx  = EVP_CIPHER_CTX_new();
     EVP_MD_CTX     *mdctx   = EVP_MD_CTX_create();
 
-    EVP_PKEY *pub_k  = nullptr;
-    EVP_PKEY *priv_k = nullptr;
-
-    if (verify)
-    {
-        pub_k  = PEM_read_PUBKEY(pub_f,  nullptr, nullptr, nullptr);
-    }
-    priv_k = PEM_read_PrivateKey(priv_f, nullptr, nullptr, nullptr);
+    EVP_PKEY *priv_k = PEM_read_PrivateKey(priv_f, nullptr, nullptr, nullptr);
+    EVP_PKEY *pub_k  = verify ? PEM_read_PUBKEY(pub_f,  nullptr, nullptr, nullptr) : nullptr;
 
     unsigned char *decode_text = static_cast<unsigned char*> (calloc(enc_msg.size() + iv_length, sizeof(*decode_text)));
 
@@ -353,17 +343,18 @@ int crypto::rsa_decrypt_verify(const std::string_view msg,       const std::stri
     }
 
     cleanup:
-    free(decode_text);
 
-    EVP_CIPHER_CTX_free(rsactx);
-    EVP_MD_CTX_destroy(mdctx);
-    EVP_PKEY_free(pub_k);
-    EVP_PKEY_free(priv_k);
+    if(rsactx != nullptr) EVP_CIPHER_CTX_free(rsactx);
+    if(mdctx  != nullptr) EVP_MD_CTX_destroy(mdctx);
+    if(pub_k  != nullptr) EVP_PKEY_free(pub_k);
+    if(priv_k != nullptr) EVP_PKEY_free(priv_k);
 
-    if (priv_f != nullptr) fclose(priv_f);
-    if (pub_f  != nullptr) fclose(pub_f);
+    if(priv_f != nullptr) fclose(priv_f);
+    if(pub_f  != nullptr) fclose(pub_f);
 
-    return (error);
+    if(decode_text != nullptr) free(decode_text);
+
+    return error;
 
 }
 
@@ -414,10 +405,6 @@ int crypto::rsa_genkeypair  (const std::string &name)
 
     if (pub_f == nullptr || priv_f == nullptr)
     {
-        if (pub_f  != nullptr) fclose(pub_f);
-        if (priv_f != nullptr) fclose(priv_f);
-        pub_f  = nullptr;
-        priv_f = nullptr;
         std::cerr << ">RSA_GENKEYPAIR ERROR OPENING FILES TO WRITE" << std::endl;
         error = 4;
         goto cleanup;
@@ -439,11 +426,11 @@ int crypto::rsa_genkeypair  (const std::string &name)
 
     cleanup:
 
-    if (pub_f  != nullptr) fclose(pub_f);
-    if (priv_f != nullptr) fclose(priv_f);
+    if(pub_f  != nullptr) fclose(pub_f);
+    if(priv_f != nullptr) fclose(priv_f);
 
-    EVP_PKEY_CTX_free(ctx);
-    EVP_PKEY_free(pkey);
+    if(ctx  != nullptr) EVP_PKEY_CTX_free(ctx);
+    if(pkey != nullptr) EVP_PKEY_free(pkey);
 
     return error;
 
@@ -456,30 +443,36 @@ int crypto::rsa_genkeypair  (const std::string &name)
 int crypto::gen_rand_bits_hex(int key_len_bits, std::string &hexKeyOut)
 {
 
+    unsigned char *aes_key_bin = nullptr;
+    int error = 0;
     if (key_len_bits % 8)
     {
         std::cerr << ">gen_hex_aes_key bits must be divisible by 8" << std::endl;
-        return 1;
+        error = 1;
+        goto cleanup;
     }
 
-    unsigned char *aes_key_bin = static_cast<unsigned char*>(calloc(key_len_bits/8, sizeof(*aes_key_bin)));
+    aes_key_bin = static_cast<unsigned char*>(calloc(key_len_bits/8, sizeof(*aes_key_bin)));
 
     if (aes_key_bin == nullptr)
     {
         std::cerr << ">gen_hex_aes_key Error Initializing" << std::endl;
-        return 2;
+        error = 2;
+        goto cleanup;
     }
 
     if (1 != RAND_bytes(aes_key_bin, key_len_bits/8))
     {
-        free(aes_key_bin);
         std::cerr << ">gen_hex_aes_key error making bytes" << std::endl;
-        return 3;
+        error = 3;
+        goto cleanup;
     }
 
     bin_to_hex_str(aes_key_bin, key_len_bits/8, hexKeyOut);
 
-    free(aes_key_bin);
+    cleanup:
 
-    return 0;
+    if(aes_key_bin != nullptr) free(aes_key_bin);
+
+    return error;
 }
